@@ -13,6 +13,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Build the Docker image
-      run: docker build . --file Dockerfile --target lint-test --tag mpc:$(date +%s)
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      -
+        name: Build the Docker image
+        uses: docker/build-push-action@v4
+        with:
+          push: false
+          tags: mpc:lint-test-latest
+          target: lint-test
