@@ -21,19 +21,19 @@
 				"python.linting.flake8Enabled": true,
 				"python.linting.flake8Args": [
 					"--config",
-					".ci/flake8.ini"
+					"${containerWorkspaceFolder}/.ci/flake8.ini"
 				],
 				"python.linting.mypyEnabled": true,
 				"python.linting.mypyArgs": [
 					"--config-file",
-					".ci/mypy.ini",
+					"${containerWorkspaceFolder}/.ci/mypy.ini",
 					"--python-version",
 					"3.8"
 				],
 				// Formatting (Black + isort)
 				"isort.args": [
 					"--settings-file",
-					".ci/isort.cfg"
+					"${containerWorkspaceFolder}/.ci/isort.cfg"
 				],
 				"[python]": {
 					"editor.codeActionsOnSave": {
@@ -44,7 +44,7 @@
 				"editor.formatOnSave": true,
 				"black-formatter.args": [
 					"--config",
-					".ci/black.cfg"
+					"${containerWorkspaceFolder}/.ci/black.cfg"
 				],
 				// Testing (Pytest)
 				"python.testing.unittestEnabled": false,
