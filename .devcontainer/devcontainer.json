@@ -68,5 +68,13 @@
 	"remoteUser": "vscode",
 	"mounts": [
 		"source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached"
+	],
+	"features": {
+		"docker-from-docker": {
+			"version": "latest"
+		}
+	},
+	"runArgs": [
+		"--init"
 	]
 }
