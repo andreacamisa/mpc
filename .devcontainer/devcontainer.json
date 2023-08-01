@@ -64,17 +64,20 @@
 			]
 		}
 	},
-	"postCreateCommand": "poetry install --with dev",
 	"remoteUser": "vscode",
+	// Create python virtual environment upon creation of container
+	"postCreateCommand": "poetry install --with dev",
+	// Forward the user's ~/.ssh directory to the container
 	"mounts": [
 		"source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached"
 	],
+	// Enable running `docker` inside the container using the host machine docker
 	"features": {
 		"docker-from-docker": {
 			"version": "latest"
 		}
 	},
 	"runArgs": [
-		"--init"
+		"--init" // this is recommended for proper process cleanup
 	]
 }
