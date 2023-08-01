@@ -14,7 +14,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = ">=3.8"
 typing-extensions = ">=4.0.1"
-numpy = "^1.19.1"
+numpy = "^1.19.0"
 
 [tool.poetry.group.dev]
 optional = true
