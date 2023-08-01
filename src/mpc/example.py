@@ -11,12 +11,12 @@ nx = 3
 nu = 2
 N = 20
 
-A = np.random.rand((nx, nx))
-B = np.random.rand((nx, nu))
-P = np.nan((N, nx, nx))
-K = np.nan((N, nu, nx))
-x = np.nan((N, nx))
-u = np.nan((N, nu))
+A = np.random.uniform(size=(nx, nx))
+B = np.random.uniform(size=(nx, nu))
+P = np.empty((N, nx, nx))
+K = np.empty((N, nu, nx))
+x = np.empty((N, nx))
+u = np.empty((N, nu))
 print(A)
 
 P[-1] = np.random.rand()
