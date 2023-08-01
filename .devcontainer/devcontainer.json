@@ -65,5 +65,8 @@
 		}
 	},
 	"postCreateCommand": "poetry install --with dev",
-	"remoteUser": "vscode"
+	"remoteUser": "vscode",
+	"mounts": [
+		"source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached"
+	]
 }
