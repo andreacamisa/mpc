@@ -4,5 +4,7 @@ FROM mcr.microsoft.com/vscode/devcontainers/python:${VARIANT}
 USER vscode
 RUN curl -sSL https://install.python-poetry.org | python -
 
-# shell alias to run CI pipeline locally
-RUN echo 'alias lint-test="docker build --output type=tar,dest=/dev/null --target lint-test ."' >> ~/.bashrc
+# shell aliases to run CI pipeline locally
+RUN echo 'alias do-format-check="docker build --target format-check ."' >> ~/.bashrc
+RUN echo 'alias do-lint="docker build --target lint ."' >> ~/.bashrc
+RUN echo 'alias do-test="docker build --target test ."' >> ~/.bashrc
