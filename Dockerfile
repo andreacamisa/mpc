@@ -32,11 +32,11 @@ RUN --mount=type=cache,target=${POETRY_CACHE_DIR},uid=${UID} poetry install --wi
 COPY --chown=app src src
 COPY --chown=app tests tests
 
-FROM ci-env as format
+FROM ci-env as format-check
 
 RUN black src tests --check --diff --config ./.ci/black.cfg
-RUN flake8 src tests --config ./.ci/flake8.ini
 RUN isort src tests --check-only --diff --settings-file ./.ci/isort.cfg
+RUN flake8 src tests --config ./.ci/flake8.ini
 
 FROM ci-env as lint
 
