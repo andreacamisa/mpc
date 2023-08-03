@@ -21,19 +21,19 @@
 				"python.linting.flake8Enabled": true,
 				"python.linting.flake8Args": [
 					"--config",
-					".ci/flake8.ini"
+					"${containerWorkspaceFolder}/.ci/flake8.ini"
 				],
 				"python.linting.mypyEnabled": true,
 				"python.linting.mypyArgs": [
 					"--config-file",
-					".ci/mypy.ini",
+					"${containerWorkspaceFolder}/.ci/mypy.ini",
 					"--python-version",
 					"3.8"
 				],
 				// Formatting (Black + isort)
 				"isort.args": [
 					"--settings-file",
-					".ci/isort.cfg"
+					"${containerWorkspaceFolder}/.ci/isort.cfg"
 				],
 				"[python]": {
 					"editor.codeActionsOnSave": {
@@ -44,7 +44,7 @@
 				"editor.formatOnSave": true,
 				"black-formatter.args": [
 					"--config",
-					".ci/black.cfg"
+					"${containerWorkspaceFolder}/.ci/black.cfg"
 				],
 				// Testing (Pytest)
 				"python.testing.unittestEnabled": false,
@@ -64,9 +64,20 @@
 			]
 		}
 	},
-	"postCreateCommand": "poetry install --with dev",
 	"remoteUser": "vscode",
+	// Create python virtual environment upon creation of container
+	"postCreateCommand": "poetry install --with dev",
+	// Forward the user's ~/.ssh directory to the container
 	"mounts": [
 		"source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached"
+	],
+	// Enable running `docker` inside the container using the host machine docker
+	"features": {
+		"docker-from-docker": {
+			"version": "latest"
+		}
+	},
+	"runArgs": [
+		"--init" // this is recommended for proper process cleanup
 	]
 }
