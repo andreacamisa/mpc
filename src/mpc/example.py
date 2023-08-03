@@ -35,8 +35,6 @@ x = np.empty((N, nx))
 u = np.empty((N, nu))
 x[0, :] = x0
 
-# Section 1.1 at https://notargit.dei.unibo.it/inotarnicola/2019_basic_topics/-/blob/master/LQR%20for%20discrete-time%20systems/notes/main_dLQR.pdf
-
 # backward pass
 P[-1, :, :] = Q
 for k in reversed(range(N - 1)):
