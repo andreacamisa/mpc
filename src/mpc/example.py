@@ -4,7 +4,7 @@ from numpy.typing import NDArray
 np.random.seed(0)
 
 
-def gen_symm_pos_def_matrix(dim: int) -> NDArray:
+def gen_symm_pos_def_matrix(dim: int) -> NDArray[np.float64]:
     while True:
         x = np.random.uniform(size=(dim, dim))
         x = x.T @ x
