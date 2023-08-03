@@ -24,3 +24,5 @@ jobs:
           push: false
           tags: mpc:lint-test-latest
           target: lint-test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
