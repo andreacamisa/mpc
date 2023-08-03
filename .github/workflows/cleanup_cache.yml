@@ -1,10 +1,8 @@
 name: Cleanup cache
 on:
-  # pull_request:
-  #   types:
-  #     - closed
   pull_request:
-    branches: [ "develop" ]
+    types:
+      - closed
 
 jobs:
   cleanup:
