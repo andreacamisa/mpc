@@ -27,13 +27,13 @@ RUN --mount=type=cache,target=${POETRY_CACHE_DIR},uid=${UID} poetry install --no
 FROM builder AS lint-test
 
 ENV PATH="/home/app/.venv/bin:$PATH"
+COPY --chown=app .ci .ci
 
+RUN --mount=type=cache,target=${POETRY_CACHE_DIR},uid=${UID} poetry install --with dev --no-root
 COPY --chown=app src src
 COPY --chown=app tests tests
-RUN --mount=type=cache,target=${POETRY_CACHE_DIR},uid=${UID} poetry install --with dev --no-root
 
 # run linting and formatting
-COPY --chown=app .ci .ci
 RUN black src tests --check --diff --config ./.ci/black.cfg
 RUN flake8 src tests --config ./.ci/flake8.ini
 RUN mypy --config-file ./.ci/mypy.ini --python-version 3.8 src tests
