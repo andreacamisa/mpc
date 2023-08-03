@@ -47,9 +47,9 @@ for k in reversed(range(N - 1)):
 
 # forward pass
 for k in range(N - 1):
-    K = -np.linalg.inv(R + B.T @ P[k + 1] @ B[k]) @ (B.T @ P[k + 1] @ A)
+    K = -np.linalg.inv(R + B[k].T @ P[k + 1] @ B[k]) @ (B[k].T @ P[k + 1] @ A[k])
     u[k] = K @ x[k]
-    x[k + 1] = A @ x[k] + B[k] @ u[k]
+    x[k + 1] = A[k] @ x[k] + B[k] @ u[k]
 
 print("Solution:")
 
