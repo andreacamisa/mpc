@@ -1,13 +1,18 @@
 name: Cleanup cache
 on:
+  # pull_request:
+  #   types:
+  #     - closed
   pull_request:
-    types:
-      - closed
+    branches: [ "develop" ]
 
 jobs:
   cleanup:
     runs-on: ubuntu-latest
     steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
       - name: Cleanup
         run: |
           gh extension install actions/gh-actions-cache
