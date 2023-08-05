@@ -16,15 +16,17 @@ jobs:
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
-
-      # - name: Create cache directory
-      #   run: mkdir -p ${{ github.workspace }}/.cache/poetry
       
       - name: Mount cache
+        id: mount-cache
         uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/.cache/poetry
           key: poetry-{{ hashFiles('poetry.lock') }}
+      
+      - name: Create cache directory
+        if: steps.mount-cache.outputs.cache-hit != 'true'
+        run: mkdir -p ${{ github.workspace }}/.cache/poetry
 
       -
         name: Linting
