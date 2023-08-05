@@ -8,7 +8,7 @@ on:
 
 jobs:
 
-  build:
+  lint-format:
 
     runs-on: ubuntu-latest
 
@@ -28,21 +28,30 @@ jobs:
           cache-to: type=gha,mode=max
       
       -
-        name: Testing
-        uses: docker/build-push-action@v4
-        with:
-          push: false
-          tags: mpc:test
-          target: test
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      -
         name: Format checking
         uses: docker/build-push-action@v4
         with:
           push: false
           tags: mpc:format-check
           target: format-check
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+  
+  test:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      
+      -
+        name: Testing
+        uses: docker/build-push-action@v4
+        with:
+          push: false
+          tags: mpc:test
+          target: test
           cache-from: type=gha
           cache-to: type=gha,mode=max
