@@ -26,9 +26,11 @@ jobs:
           restore-keys: |
             poetry-
       
-      - name: Create cache directory
-        if: steps.mount-cache.outputs.cache-hit != 'true'
-        run: mkdir -p ${{ github.workspace }}/.cache/poetry
+      - name: Create cache directory and retrieve directory uid
+        id: create-cache-dir
+        run: |
+          mkdir -p ${{ github.workspace }}/.cache/poetry
+          echo "uid=$(id -u $(stat -c "%U" ${{ github.workspace }}/.cache/poetry))" >> $GITHUB_OUTPUT
 
       -
         name: Linting
@@ -40,6 +42,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-contexts: poetry_cache=${{ github.workspace }}/.cache/poetry
+          build-args: UID=${{ steps.create-cache-dir.outputs.uid }}
       
       -
         name: Testing
@@ -51,6 +54,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-contexts: poetry_cache=${{ github.workspace }}/.cache/poetry
+          build-args: UID=${{ steps.create-cache-dir.outputs.uid }}
 
       -
         name: Format checking
@@ -62,6 +66,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-contexts: poetry_cache=${{ github.workspace }}/.cache/poetry
+          build-args: UID=${{ steps.create-cache-dir.outputs.uid }}
       
       - name: List files in cache
         run: find ${{ github.workspace }}/.cache/poetry
