@@ -21,14 +21,14 @@ WORKDIR /home/app
 # create virtual environment and install dependencies
 RUN touch README.md
 COPY --chown=app pyproject.toml poetry.lock ./
-RUN --mount=type=cache,target=${POETRY_CACHE_DIR},uid=${UID} poetry install --no-root
+RUN --mount=type=cache,target=${POETRY_CACHE_DIR},uid=${UID},from=poetry_cache poetry install --no-root
 
 FROM builder AS ci-env
 
 ENV PATH="/home/app/.venv/bin:$PATH"
 COPY --chown=app .ci .ci
 
-RUN --mount=type=cache,target=${POETRY_CACHE_DIR},uid=${UID} poetry install --with dev --no-root
+RUN --mount=type=cache,target=${POETRY_CACHE_DIR},uid=${UID},from=poetry_cache poetry install --with dev --no-root
 COPY --chown=app src src
 COPY --chown=app tests tests
 

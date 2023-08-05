@@ -16,6 +16,12 @@ jobs:
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
+      
+      - name: Mount Cache
+        uses: actions/cache@v3
+        with:
+          path: ~/cache/poetry
+          key: poetry-{{ hashFiles('poetry.lock') }}
 
       -
         name: Linting
@@ -26,6 +32,7 @@ jobs:
           target: lint
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-contexts: poetry_cache=~/cache/poetry
       
       -
         name: Testing
@@ -36,6 +43,7 @@ jobs:
           target: test
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-contexts: poetry_cache=~/cache/poetry
 
       -
         name: Format checking
@@ -46,3 +54,4 @@ jobs:
           target: format-check
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-contexts: poetry_cache=~/cache/poetry
