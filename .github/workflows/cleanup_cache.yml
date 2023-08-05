@@ -22,7 +22,7 @@ jobs:
 
           echo "Example of output of command gh actions-cache:"
           gh actions-cache list -R $REPO -B $BRANCH -L 10
-          echo "========================""
+          echo "========================"
 
           while true
           do
