@@ -1,8 +1,10 @@
 name: Cleanup cache
 on:
+  # pull_request:
+  #   types:
+  #     - closed
   pull_request:
-    types:
-      - closed
+    branches: [ "develop" ]
 
 jobs:
   cleanup:
@@ -18,10 +20,15 @@ jobs:
           REPO=${{ github.repository }}
           BRANCH="refs/pull/${{ github.event.pull_request.number }}/merge"
 
+          echo "Example of output of command gh actions-cache:"
+          gh actions-cache list -R $REPO -B $BRANCH -L 10
+          echo "========================""
+
           while true
           do
               echo "Fetching list of cache key"
-              cacheKeysForPR=$(gh actions-cache list -R $REPO -B $BRANCH -L 100 | cut -f 1 )
+              # cacheKeysForPR=$(gh actions-cache list -R $REPO -B $BRANCH -L 100 | cut -f 1 )
+              cacheKeysForPR=$(gh actions-cache list -R $REPO -L 100 | cut -f 1 )
 
               if [ -z "$(printf "%s" "$cacheKeysForPR")" ]
               then
@@ -34,7 +41,8 @@ jobs:
               for cacheKey in $cacheKeysForPR
               do
                   echo Deleting $cacheKey
-                  gh actions-cache delete $cacheKey -R $REPO -B $BRANCH --confirm
+                  # gh actions-cache delete $cacheKey -R $REPO -B $BRANCH --confirm
+                  gh actions-cache delete $cacheKey -R $REPO --confirm
               done
               set -e
           done
