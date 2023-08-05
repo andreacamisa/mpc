@@ -62,3 +62,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-contexts: poetry_cache=${{ github.workspace }}/.cache/poetry
+      
+      - name: List files in cache
+        run: find ${{ github.workspace }}/.cache/poetry
