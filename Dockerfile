@@ -20,7 +20,7 @@ WORKDIR /home/app
 
 # create virtual environment and install dependencies
 RUN touch README.md
-RUN touch prova
+RUN touch provaa
 COPY --chown=app pyproject.toml poetry.lock ./
 RUN --mount=type=cache,target=${POETRY_CACHE_DIR},uid=${UID},from=poetry_cache poetry install --no-root
 
