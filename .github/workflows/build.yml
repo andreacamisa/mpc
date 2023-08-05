@@ -23,6 +23,8 @@ jobs:
         with:
           path: ${{ github.workspace }}/.cache/poetry
           key: poetry-${{ hashFiles('poetry.lock') }}
+          restore-keys: |
+            poetry-
       
       - name: Create cache directory
         if: steps.mount-cache.outputs.cache-hit != 'true'
