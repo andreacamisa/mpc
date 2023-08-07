@@ -1,15 +1,15 @@
+from typing import cast
+
 import numpy as np
 from numpy.typing import NDArray
 
 np.random.seed(0)
 
 
-def gen_symm_pos_def_matrix(dim: int) -> NDArray[np.float64]:
-    while True:
-        x = np.random.uniform(size=(dim, dim))
-        x = x.T @ x
-        if np.all(np.linalg.eigvals(x) > 0):
-            return x
+def gen_symm_pos_def_matrix(dim: int, max_eig: float = 10.0) -> NDArray[np.float64]:
+    orthMatrix, _ = np.linalg.qr(np.random.normal(size=(dim, dim)))
+    x = orthMatrix.T @ np.diag(np.random.uniform(size=(dim), high=max_eig)) @ orthMatrix
+    return cast(NDArray[np.float64], x)
 
 
 nx = 3
