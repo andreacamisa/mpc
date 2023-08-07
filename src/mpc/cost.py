@@ -3,6 +3,21 @@ from abc import abstractmethod
 from nptyping import Float, NDArray, Shape
 
 
+@dataclass
+class StageCostMatrices:
+    Q: NDArray
+    R: NDArray
+    S: NDArray
+    q: NDArray
+    r: NDArray
+
+
+@dataclass
+class TerminalCostMatrices:
+    Q: NDArray
+    q: NDArray
+
+
 class StageCost:
     # TODO (acamisa): single item (x'Qx + u'Ru) of cost function at a time instant
     def __init__(
@@ -15,15 +30,11 @@ class StageCost:
 
 class Cost:
     @abstractmethod
-    def get_state_cost(self, time: int) -> NDArray[Shape["x, x"], Float]:
+    def get_stage_cost(self, time: int) -> StageCostMatrices:
         pass
 
     @abstractmethod
-    def get_input_cost(self, time: int) -> NDArray[Shape["u, u"], Float]:
-        pass
-
-    @abstractmethod
-    def get_terminal_cost(self) -> NDArray[Shape["x, x"], Float]:
+    def get_terminal_cost(self) -> TerminalCostMatrices:
         pass
 
 
@@ -35,3 +46,10 @@ class TimeInvariantCost(Cost):
 
 class TimeVaryingCost(Cost):
     pass  # TODO(acamisa): use different StageCosts to return values
+
+
+class LinearizedSystemLQCost(Cost):
+    def __init__(self, nonlinear_dynamics) -> None:
+        super().__init__()
+
+    pass
