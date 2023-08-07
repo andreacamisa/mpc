@@ -81,9 +81,6 @@ class LinearizedSystem(System):
         self._inputs = inputs
 
     def get_dynamics(self) -> Iterator[LinearDynamics]:
-        return self._get_dynamics()
-
-    def _get_dynamics(self) -> Iterator[LinearDynamics]:
         x = self._x0
         for u in iter(self._inputs):
             x, A_jac, B_jac = self._dynamics(x, u)
