@@ -1,9 +1,8 @@
 import itertools
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Iterator, List, Optional
+from typing import Iterable, Iterator
 
-import numpy as np
 from nptyping import Float, NDArray, Shape
 
 
@@ -82,16 +81,11 @@ class TimeInvariantCost(Cost):
 class TimeVaryingCost(Cost):
     def __init__(
         self,
-        stage_costs: List[QuadraticStageCost],
-        terminal_cost: Optional[QuadraticTerminalCost] = None,
+        stage_costs: Iterable[QuadraticStageCost],
+        terminal_cost: QuadraticTerminalCost,
     ) -> None:
         self._stage_costs = stage_costs
-        if terminal_cost is not None:
-            self._terminal_cost = terminal_cost
-        else:
-            self._terminal_cost = QuadraticTerminalCost(
-                np.zeros(stage_costs[0].Q.shape), np.zeros(stage_costs[0].q.shape)
-            )
+        self._terminal_cost = terminal_cost
 
     def get_stage_cost(self) -> Iterator[QuadraticStageCost]:
         return iter(self._stage_costs)
