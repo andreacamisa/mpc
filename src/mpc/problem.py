@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from mpc.cost import Cost
-from mpc.system import Dynamics
+from mpc.system import System
 from nptyping import Float, NDArray, Shape
 
 
@@ -9,5 +9,5 @@ from nptyping import Float, NDArray, Shape
 class OptimalControlProblem:
     horizon: int
     cost: Cost
-    dynamics: Dynamics
-    initial_state: NDArray[Shape["*"], Float]
+    system: System
+    initial_state: NDArray[Shape["N"], Float]

@@ -6,28 +6,71 @@ time invariant or time-varying and allows you to get the information at differen
 """
 
 
-from abc import abstractmethod
-from typing import Tuple
+import itertools
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from typing import Callable, Iterable, Iterator, Tuple
 
+import numpy as np
 from nptyping import Float, NDArray, Shape
+from typing_extensions import TypeAlias
+
+State: TypeAlias = NDArray[Shape["*"], Float]
+Input: TypeAlias = NDArray[Shape["*"], Float]
+StateJacobian: TypeAlias = NDArray[Shape["N, N"], Float]
+InputJacobian: TypeAlias = NDArray[Shape["N, M"], Float]
 
 
-class Dynamics:
+@dataclass
+class LinearDynamics:
+    """Linear dynamics (with an affine term) of the form
+
+    `x(t+1) = Ax(t) + Bu(t) + c`
+    """
+
+    A: NDArray[Shape["N, N"], Float]
+    """State matrix multiplying `x`."""
+
+    B: NDArray[Shape["N, M"], Float]
+    """Input matrix multiplying `u`."""
+
+    c: NDArray[Shape["N"], Float]  # TODO (acamisa): make field optional
+    """Constant term added to state equation."""
+
+
+class System(ABC):
+    """Discrete-time dynamical system of the form `x(t+1) = f(x(t), u(t), t)`."""
+
     @abstractmethod
-    def get_matrices(
-        self, time: int
-    ) -> Tuple[NDArray[Shape["x, x"], Float], NDArray[Shape["x, u"], Float]]:
+    def get_dynamics(self) -> Iterator[LinearDynamics]:
+        """Get iterator for linearized dynamics of system.
+
+        Returns an iterator where each element represents the linearized dynamics of the
+        system at each time instant, starting from time 0.
+        """
         pass
 
 
-class TimeInvariantDynamics(Dynamics):
+class TimeInvariantSystem(System):
+    def __init__(self, dynamics: LinearDynamics) -> None:
+        self._dynamics = dynamics
+
+    def get_dynamics(self) -> Iterator[LinearDynamics]:
+        return itertools.repeat(self._dynamics)
+
+
+class LinearizedSystem(System):
     def __init__(
         self,
-        state_matrix: NDArray[Shape["x, x"], Float],
-        input_matrix: NDArray[Shape["x, u"], Float],
+        dynamics: Callable[[State, Input], Tuple[State, StateJacobian, InputJacobian]],
+        x0: State,
+        inputs: Iterable[Input],
     ) -> None:
-        super().__init__()
+        self._dynamics = dynamics
+        self._x = x0
+        self._inputs = iter(inputs)
 
-
-class TimeVaryingDynamics(Dynamics):
-    pass
+    def get_dynamics(self) -> Iterator[LinearDynamics]:
+        x_new, A_jac, B_jac = self._dynamics(self._x, next(self._inputs))
+        self._x = x_new
+        yield LinearDynamics(A_jac, B_jac, np.zeros(x_new.shape))
