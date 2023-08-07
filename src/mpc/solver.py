@@ -32,30 +32,51 @@ class Solver:
 class RiccatiSolver(Solver):
     def solve(self, problem: OptimalControlProblem) -> ProblemSolution:
         P_list: List[NDArray[Shape["N, N"], Float]] = []
+        p_list: List[NDArray[Shape["*"], Float]] = []
         K_list: List[NDArray[Shape["N, M"], Float]] = []
+        sigma_list: List[NDArray[Shape["*"], Float]] = []
         dynamics = list(
             itertools.islice(problem.system.get_dynamics(), problem.horizon)
         )
         cost = list(itertools.islice(problem.cost.get_stage_cost(), problem.horizon))
+        terminal_cost = problem.cost.get_terminal_cost()
 
-        # backward pass by prepending elements to P
-        P_list.append(problem.cost.get_terminal_cost().Q)
+        # backward pass by prepending elements
+        P_kp = terminal_cost.Q
+        p_kp = terminal_cost.q
+        P_list.append(P_kp)
+        p_list.append(p_kp)
         for k in reversed(range(problem.horizon - 1)):
-            A_k, B_k = dynamics[k].A, dynamics[k].B
-            Q_k, R_k = cost[k].Q, cost[k].R
-
-            P_kp = P_list[0]  # because we prepend, P[0] is always the last P computed
-            tmp = A_k.T @ P_kp @ B_k
-            P_k = (
-                Q_k
-                + A_k.T @ P_kp @ A_k
-                - tmp @ np.linalg.inv(R_k + B_k.T @ P_kp @ B_k) @ tmp.T
+            A_k, B_k, c_k = dynamics[k].A, dynamics[k].B, dynamics[k].c
+            Q_k, R_k, S_k, q_k, r_k = (
+                cost[k].Q,
+                cost[k].R,
+                cost[k].S,
+                cost[k].q,
+                cost[k].r,
             )
-            K_k = -np.linalg.inv(R_k + B_k.T @ P_kp @ B_k) @ (B_k.T @ P_kp @ A_k)
 
-            # prepend to lists
+            # update P
+            tmp = np.linalg.inv(R_k + B_k.T @ P_kp @ B_k)
+            K_k = -tmp @ (S_k + B_k.T @ P_kp @ A_k)
+            P_k = Q_k + A_k.T @ P_kp @ A_k + K_k.T @ (R_k + B_k.T @ P_kp @ B_k) @ K_k
+
+            # update p
+            sigma_k = -tmp @ (r_k + B_k.T @ (p_kp + P_kp @ c_k))
+            p_k = (
+                q_k
+                + A_k.T @ p_kp
+                + A_k.T @ P_kp @ c_k
+                + K_k.T @ (R_k + B_k.T @ P_kp @ B_k) @ sigma_k
+            )
+
+            # add to lists
             P_list.insert(0, P_k)
+            p_list.insert(0, p_k)
             K_list.insert(0, K_k)
+            sigma_list.insert(0, sigma_k)
+            P_kp = P_k
+            p_kp = p_k
 
         x_traj = np.zeros((problem.horizon, A_k.shape[0]))
         x_traj[0] = problem.initial_state
@@ -63,8 +84,8 @@ class RiccatiSolver(Solver):
 
         # forward pass
         for k in range(problem.horizon - 1):
-            A_k, B_k = dynamics[k].A, dynamics[k].B
-            u_traj[k] = K_list[k] @ x_traj[k]
-            x_traj[k + 1] = A_k @ x_traj[k] + B_k @ u_traj[k]
+            A_k, B_k, c_k = dynamics[k].A, dynamics[k].B, dynamics[k].c
+            u_traj[k] = K_list[k] @ x_traj[k] + sigma_list[k]
+            x_traj[k + 1] = A_k @ x_traj[k] + B_k @ u_traj[k] + c_k
 
         return ProblemSolution(x_traj, u_traj)
