@@ -17,8 +17,8 @@ nu = 2
 N = 20  # prediction horizon
 
 # system matrices
-A = np.random.uniform(size=(nx, nx))
-B = np.random.uniform(size=(nx, nu))
+A = np.random.uniform(size=(N, nx, nx))
+B = np.random.uniform(size=(N, nx, nu))
 
 # initial state
 x0 = np.ones(nx)
@@ -38,14 +38,18 @@ x[0] = x0
 # backward pass
 P[-1] = Q
 for k in reversed(range(N - 1)):
-    tmp = A.T @ P[k + 1] @ B
-    P[k] = Q + A.T @ P[k + 1] @ A - tmp @ np.linalg.inv(R + B.T @ P[k + 1] @ B) @ tmp.T
+    tmp = A[k].T @ P[k + 1] @ B[k]
+    P[k] = (
+        Q
+        + A[k].T @ P[k + 1] @ A[k]
+        - tmp @ np.linalg.inv(R + B[k].T @ P[k + 1] @ B[k]) @ tmp.T
+    )
 
 # forward pass
 for k in range(N - 1):
-    K = -np.linalg.inv(R + B.T @ P[k + 1] @ B) @ (B.T @ P[k + 1] @ A)
+    K = -np.linalg.inv(R + B[k].T @ P[k + 1] @ B[k]) @ (B[k].T @ P[k + 1] @ A[k])
     u[k] = K @ x[k]
-    x[k + 1] = A @ x[k] + B @ u[k]
+    x[k + 1] = A[k] @ x[k] + B[k] @ u[k]
 
 print("Solution:")
 
