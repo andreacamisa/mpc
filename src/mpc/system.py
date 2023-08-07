@@ -48,6 +48,8 @@ class System(ABC):
         Returns an iterator where each element represents the linearized dynamics of the
         system at each time instant, starting from time 0.
         """
+        # TODO (acamisa): find better wording here, it's not correct to say linearized dynamics
+        # and then return also an affine term
         pass
 
 
@@ -59,6 +61,14 @@ class TimeInvariantSystem(System):
         return itertools.repeat(self._dynamics)
 
 
+class TimeVaryingSystem(System):
+    def __init__(self, dynamics: Iterable[LinearDynamics]) -> None:
+        self._dynamics = dynamics
+
+    def get_dynamics(self) -> Iterator[LinearDynamics]:
+        return iter(self._dynamics)
+
+
 class LinearizedSystem(System):
     def __init__(
         self,
@@ -67,10 +77,14 @@ class LinearizedSystem(System):
         inputs: Iterable[Input],
     ) -> None:
         self._dynamics = dynamics
-        self._x = x0
-        self._inputs = iter(inputs)
+        self._x0 = x0
+        self._inputs = inputs
 
     def get_dynamics(self) -> Iterator[LinearDynamics]:
-        x_new, A_jac, B_jac = self._dynamics(self._x, next(self._inputs))
-        self._x = x_new
-        yield LinearDynamics(A_jac, B_jac, np.zeros(x_new.shape))
+        return self._get_dynamics()
+
+    def _get_dynamics(self) -> Iterator[LinearDynamics]:
+        x = self._x0
+        for u in iter(self._inputs):
+            x, A_jac, B_jac = self._dynamics(x, u)
+            yield LinearDynamics(A_jac, B_jac, np.zeros(x.shape))
