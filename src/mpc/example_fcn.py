@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, cast
 
 import numpy as np
 from numpy.typing import NDArray
@@ -18,7 +18,7 @@ def gen_symm_pos_def_matrix(dim: int, max_eig: float = 10.0) -> NDArray[np.float
     Q, _ = np.linalg.qr(np.random.normal(size=(dim, dim)))
     Ttemp = Q @ Q.T
     x = Ttemp.T @ np.diag(np.random.uniform(size=(dim), high=max_eig)) @ Ttemp
-    return x
+    return cast(NDArray[np.float64], x)
 
 
 def solve_LQ(

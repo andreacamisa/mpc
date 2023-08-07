@@ -18,14 +18,14 @@ class LinearDynamics(Dynamics):
         self, x: NDArray[np.float64], u: NDArray[np.float64]
     ) -> Tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]:
         xp = x + u
-        df_dx = np.array[[1]]
-        df_du = np.array[[1]]
+        df_dx = np.array([[1, 1], [2, 3]])
+        df_du = np.asarray([[1, 1], [2, 3]])
         return xp, df_dx, df_du
 
 
 def shooting(
     N: int, nx: int, nu: int, x0: NDArray[np.float64], dynamics: Dynamics
-) -> NDArray[np.float64]:
+) -> Tuple[NDArray[np.float64], NDArray[np.float64]]:
     utraj = np.zeros((N, nu))
     xtraj = np.empty((N, nx))
     xtraj[0] = x0
