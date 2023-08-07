@@ -1,5 +1,6 @@
+from typing import Tuple
+
 import numpy as np
-import scipy.linalg
 from numpy.typing import NDArray
 
 np.random.seed(0)
@@ -13,9 +14,10 @@ def gen_symm_pos_def_matrix_old(dim: int) -> NDArray[np.float64]:
             return x
 
 
-def gen_symm_pos_def_matrix(dim: int, max_eig: int = 10) -> NDArray[np.float64]:
-    Ttemp = scipy.linalg.orth(np.random.normal(size=(dim, dim)))
-    x = Ttemp.T @ np.diag(max_eig * np.random.uniform(size=(dim))) @ Ttemp
+def gen_symm_pos_def_matrix(dim: int, max_eig: float = 10.0) -> NDArray[np.float64]:
+    Q, _ = np.linalg.qr(np.random.normal(size=(dim, dim)))
+    Ttemp = Q @ Q.T
+    x = Ttemp.T @ np.diag(np.random.uniform(size=(dim), high=max_eig)) @ Ttemp
     return x
 
 
@@ -26,7 +28,7 @@ def solve_LQ(
     B: NDArray[np.float64],
     N: int,
     x0: NDArray[np.float64],
-) -> NDArray[np.float64]:
+) -> Tuple[NDArray[np.float64], NDArray[np.float64]]:
     """
     Solve canonical LQ: min Sum_k x'Qx + u'Ru
                                     st x' = Ax+Bu, x0 = xzero
