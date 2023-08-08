@@ -16,8 +16,8 @@ class QuadraticStageCost:
     R: NDArray[Shape["M, M"], Float]
     """Matrix for input quadratic term `u'Ru`."""
 
-    S: NDArray[Shape["N, M"], Float]
-    """Matrix for mixed quadratic term `x'Su`."""
+    S: NDArray[Shape["M, N"], Float]
+    """Matrix for mixed quadratic term `u'Sx`."""
 
     q: NDArray[Shape["N"], Float]
     """Vector for state linear term `q'x`."""
