@@ -59,8 +59,10 @@ print("Solution:")
 
 for k in range(horizon):
     print(f"time {k}")
-    print(f"\tx = {np.array2string(solution.state[k], precision=4, floatmode='fixed')}")
+    print(
+        f"\tx = {np.array2string(solution.state_traj[k], precision=4, floatmode='fixed')}"
+    )
     if k != horizon - 1:
         print(
-            f"\tu = {np.array2string(solution.input[k], precision=4, floatmode='fixed')}"
+            f"\tu = {np.array2string(solution.input_traj[k], precision=4, floatmode='fixed')}"
         )
