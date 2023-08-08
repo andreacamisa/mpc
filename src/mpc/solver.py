@@ -6,31 +6,40 @@ from typing import List
 import numpy as np
 from mpc.problem import OptimalControlProblem
 from nptyping import Float, NDArray, Shape
-from typing_extensions import TypeAlias
 
-Trajectory: TypeAlias = NDArray[Shape["Time, State"], Float]
+
+@dataclass(frozen=True)
+class ProblemSolution:
+    """Solution to an optimal control problem."""
+
+    state_traj: NDArray[Shape["T, N"], Float]
+    """State trajectory (numpy array with time on rows and state entries on columns)."""
+
+    input_traj: NDArray[Shape["T, M"], Float]
+    """Input trajectory (numpy array with time on rows and input entries on columns)."""
+
+
 """
-TODO (acamisa): turn Trajectory into a fully-featured class that allows e.g. for:
+TODO (acamisa): turn state and input trajectories into a fully-featured class that allows e.g. for:
 - trajectory[t] or trajectory.get(t) <- return state vector at time t
 - trajectory[t, k] or trajectory.get(t, k) <- return k-th entry of state at time t
 - trajectory.get_entry(k) <- return trajectory vector of k-th entry of state
 """
 
 
-@dataclass(frozen=True)
-class ProblemSolution:
-    state: Trajectory
-    input: Trajectory
-
-
 class Solver:
+    """Generic interface for optimal control problem solvers."""
+
     @abstractmethod
     def solve(self, problem: OptimalControlProblem) -> ProblemSolution:
+        """Solve an optimal control problem."""
         pass
 
 
 class RiccatiSolver(Solver):
     def solve(self, problem: OptimalControlProblem) -> ProblemSolution:
+        # TODO check that problem is unconstrained LQ
+
         P_list: List[NDArray[Shape["N, N"], Float]] = []
         p_list: List[NDArray[Shape["*"], Float]] = []
         K_list: List[NDArray[Shape["N, M"], Float]] = []
