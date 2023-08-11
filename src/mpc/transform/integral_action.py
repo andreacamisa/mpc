@@ -1,3 +1,4 @@
+import numpy as np
 from mpc.cost import QuadraticStageCost, QuadraticTerminalCost, TransformedCost
 from mpc.problem import OptimalControlProblem
 from mpc.solver import ProblemSolution
@@ -39,6 +40,14 @@ class IntegralActionTransform(ProblemTransform):
     def _change_dynamics(self, dynamics: LinearDynamics) -> LinearDynamics:
         # TODO IVANO: qui si fanno le dovute manipolazioni alle matrici della dinamica prima di darle al solver
         # (la funzione viene chiamata separatamente per ogni istante di tempo t)
+        nx = dynamics.A.shape[0]
+        nu = dynamics.B.shape[0]
+
+        A_aug = np.block([[dynamics.A, np.zeros((nx, nx))], [np.eye(nx), np.eye(nx)]])
+        B_aug = np.vstack((dynamics.B, np.zeros((nx, nu))))
+
+        return LinearDynamics(A_aug, B_aug)
+
         raise NotImplementedError()
 
     def _change_stage_cost(self, cost: QuadraticStageCost) -> QuadraticStageCost:
