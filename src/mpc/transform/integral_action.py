@@ -35,32 +35,57 @@ class IntegralActionTransform(ProblemTransform):
         self, state: NDArray[Shape["N"], Float]
     ) -> NDArray[Shape["N"], Float]:
         # TODO IVANO: qui si fanno le dovute manipolazioni allo stato iniziale prima di darlo al solver
-        raise NotImplementedError()
+        # raise NotImplementedError()
+        nx = state.shape[0]
+        return np.concatenate(state, np.zeros((nx)))
 
     def _change_dynamics(self, dynamics: LinearDynamics) -> LinearDynamics:
         # TODO IVANO: qui si fanno le dovute manipolazioni alle matrici della dinamica prima di darle al solver
         # (la funzione viene chiamata separatamente per ogni istante di tempo t)
+        # raise NotImplementedError()
         nx = dynamics.A.shape[0]
         nu = dynamics.B.shape[0]
 
         A_aug = np.block([[dynamics.A, np.zeros((nx, nx))], [np.eye(nx), np.eye(nx)]])
         B_aug = np.vstack((dynamics.B, np.zeros((nx, nu))))
+        c_aug = np.vstack((dynamics.c, np.zeros((nx))))
 
-        return LinearDynamics(A_aug, B_aug)
-
-        raise NotImplementedError()
+        return LinearDynamics(A=A_aug, B=B_aug, c=c_aug)
 
     def _change_stage_cost(self, cost: QuadraticStageCost) -> QuadraticStageCost:
-        # TODO IVANO: qui si fanno le dovute manipolazioni alle matrici dello stage cost prima di darle al solver
-        # (la funzione viene chiamata separatamente per ogni istante di tempo t)
-        raise NotImplementedError()
+        # raise NotImplementedError()
+        #
+        # do NOT weight the integrator state
+        nx = cost.Q.shape[0]
+        nu = cost.R.shape[0]
+
+        Q_aug = np.block(
+            [[cost.Q, np.zeros((nx, nx))], [np.zeros((nx, nx)), np.zeros((nx, nx))]]
+        )
+
+        S_aug = np.block([[cost.S, np.zeros((nu, nx))]])
+
+        q_aug = np.concatenate(cost.q, np.zeros((nx)))
+
+        return QuadraticStageCost(Q=Q_aug, R=cost.R, S=S_aug, q=q_aug, r=cost.r)
 
     def _change_terminal_cost(
         self, cost: QuadraticTerminalCost
     ) -> QuadraticTerminalCost:
-        # TODO IVANO: qui si fanno le dovute manipolazioni alle matrici del terminal cost prima di darle al solver
-        raise NotImplementedError()
+        # raise NotImplementedError()
+        nx = cost.Q.shape[0]
 
-    def inverse_transform_solution(self, solution: ProblemSolution) -> ProblemSolution:
-        # TODO IVANO: qui bisogna riadattare la traiettoria della soluzione in termini del problem originale
-        raise NotImplementedError()
+        Q_aug = np.block(
+            [[cost.Q, np.zeros((nx, nx))], [np.zeros((nx, nx)), np.zeros((nx, nx))]]
+        )
+        q_aug = np.concatenate(cost.q, np.zeros((nx)))
+
+        return QuadraticTerminalCost(Q=Q_aug, q=q_aug)
+
+    def inverse_transform_solution(
+        self, solution: ProblemSolution, nx: int
+    ) -> ProblemSolution:
+        # IVANO: serve la dimensione di x originale
+        state_traj = solution.state_traj[:nx]
+
+        return ProblemSolution(state_traj=state_traj, input_traj=solution.input_traj)

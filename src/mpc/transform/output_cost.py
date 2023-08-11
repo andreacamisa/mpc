@@ -30,17 +30,23 @@ class OutputCostTransform(ProblemTransform):
         )
 
     def _change_stage_cost(self, cost: QuadraticStageCost) -> QuadraticStageCost:
-        # TODO IVANO: qui si fanno le dovute manipolazioni alle matrici dello stage cost prima di darle al solver
+        # Cosi?
         # (la funzione viene chiamata separatamente per ogni istante di tempo t)
 
         # qui bisogna immaginare e.g. che cost.Q sia la matrice applicata alla y invece che alla x
-        raise NotImplementedError()
+        return QuadraticStageCost(
+            Q=self._C.T @ cost.Q @ self._C,
+            R=cost.R,
+            S=cost.S @ self._C,
+            q=cost.q @ self._C,
+            r=cost.r,
+        )
 
     def _change_terminal_cost(
         self, cost: QuadraticTerminalCost
     ) -> QuadraticTerminalCost:
         # TODO IVANO: qui si fanno le dovute manipolazioni alle matrici del terminal cost prima di darle al solver
-        raise NotImplementedError()
+        return QuadraticStageCost(Q=self._C.T @ cost.Q @ self._C, q=cost.q @ self._C)
 
     def inverse_transform_solution(self, solution: ProblemSolution) -> ProblemSolution:
         return solution

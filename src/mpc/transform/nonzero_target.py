@@ -31,16 +31,22 @@ class NonZeroTargetTransform(ProblemTransform):
             initial_state=problem.initial_state,
         )
 
-    def _change_stage_cost(self, cost: QuadraticStageCost) -> QuadraticStageCost:
-        # TODO IVANO: qui si fanno le dovute manipolazioni alle matrici dello stage cost prima di darle al solver
-        # (la funzione viene chiamata separatamente per ogni istante di tempo t)
-        raise NotImplementedError()
+    def _change_stage_cost(
+        self, cost: QuadraticStageCost, xref: Float, uref: Float
+    ) -> QuadraticStageCost:
+        # IVANO: necessario passare anche (xref,uref)
+        q_aug = cost.q - 2 * cost.Q @ xref - 2 * cost.S.T @ uref
+        r_aug = cost.r - 2 * cost.R @ uref - 2 * cost.S @ xref
+
+        return QuadraticStageCost(Q=cost.Q, R=cost.R, S=cost.S, q=q_aug, r=r_aug)
 
     def _change_terminal_cost(
-        self, cost: QuadraticTerminalCost
+        self, cost: QuadraticTerminalCost, xref: Float
     ) -> QuadraticTerminalCost:
-        # TODO IVANO: qui si fanno le dovute manipolazioni alle matrici del terminal cost prima di darle al solver
-        raise NotImplementedError()
+        # IVANO: necessario passare anche xref
+        q_aug = cost.q - 2 * cost.Q @ xref
+
+        return QuadraticTerminalCost(cost.Q, q=q_aug)
 
     def inverse_transform_solution(self, solution: ProblemSolution) -> ProblemSolution:
         return solution
