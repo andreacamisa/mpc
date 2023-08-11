@@ -1,7 +1,7 @@
 import itertools
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Iterable, Iterator
+from typing import Callable, Iterable, Iterator
 
 from nptyping import Float, NDArray, Shape
 
@@ -92,3 +92,31 @@ class TimeVaryingCost(Cost):
 
     def get_terminal_cost(self) -> QuadraticTerminalCost:
         return self._terminal_cost
+
+
+class TransformedCost(Cost):
+    def __init__(
+        self,
+        cost: Cost,
+        stage_transform: Callable[[QuadraticStageCost], QuadraticStageCost],
+        terminal_transform: Callable[[QuadraticTerminalCost], QuadraticTerminalCost],
+    ) -> None:
+        """Cost function transformed according to some functions.
+
+        This class models a cost function which gets transformed according to some
+        functions applied to stage costs and terminal cost respectively.
+
+        Args:
+            cost: original cost function that must be transformed.
+            stage_transform: transformation to apply to stage costs at each instant.
+            terminal_transform: transformation to apply to terminal cost.
+        """
+        self._cost = cost
+        self._stage_transform = stage_transform
+        self._terminal_transform = terminal_transform
+
+    def get_stage_cost(self) -> Iterator[QuadraticStageCost]:
+        yield self._stage_transform(next(self._cost.get_stage_cost()))
+
+    def get_terminal_cost(self) -> QuadraticTerminalCost:
+        return self._terminal_transform(self._cost.get_terminal_cost())

@@ -85,3 +85,25 @@ class LinearizedSystem(System):
         for u in iter(self._inputs):
             x, A_jac, B_jac = self._dynamics(x, u)
             yield LinearDynamics(A_jac, B_jac, np.zeros(x.shape))
+
+
+class TransformedSystem(System):
+    def __init__(
+        self,
+        system: System,
+        transform: Callable[[LinearDynamics], LinearDynamics],
+    ) -> None:
+        """System with dynamics transformed according to some function.
+
+        This class models a system with dynamics that gets transformed according to
+        some function.
+
+        Args:
+            system: original system that must be transformed.
+            transform: transformation to apply to system dynamics at each instant.
+        """
+        self._system = system
+        self._transform = transform
+
+    def get_dynamics(self) -> Iterator[LinearDynamics]:
+        yield self._transform(next(self._system.get_dynamics()))
