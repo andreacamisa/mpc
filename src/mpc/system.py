@@ -52,6 +52,12 @@ class System(ABC):
         # and then return also an affine term
         pass
 
+    @property
+    @abstractmethod
+    def state_dim(self) -> int:
+        """Dimension of the state vector."""
+        pass
+
 
 class TimeInvariantSystem(System):
     def __init__(self, dynamics: LinearDynamics) -> None:
@@ -60,13 +66,22 @@ class TimeInvariantSystem(System):
     def get_dynamics(self) -> Iterator[LinearDynamics]:
         return itertools.repeat(self._dynamics)
 
+    @property
+    def state_dim(self) -> int:
+        return self._dynamics.A.shape[0]
+
 
 class TimeVaryingSystem(System):
-    def __init__(self, dynamics: Iterable[LinearDynamics]) -> None:
+    def __init__(self, dynamics: Iterable[LinearDynamics], state_dim: int) -> None:
         self._dynamics = dynamics
+        self._state_dim = state_dim
 
     def get_dynamics(self) -> Iterator[LinearDynamics]:
         return iter(self._dynamics)
+
+    @property
+    def state_dim(self) -> int:
+        return self._state_dim
 
 
 class LinearizedSystem(System):
@@ -85,3 +100,36 @@ class LinearizedSystem(System):
         for u in iter(self._inputs):
             x, A_jac, B_jac = self._dynamics(x, u)
             yield LinearDynamics(A_jac, B_jac, np.zeros(x.shape))
+
+    @property
+    def state_dim(self) -> int:
+        return self._x0.shape[0]
+
+
+class TransformedSystem(System):
+    def __init__(
+        self,
+        system: System,
+        transform: Callable[[LinearDynamics], LinearDynamics],
+        new_state_dim: int,
+    ) -> None:
+        """System with dynamics transformed according to some function.
+
+        This class models a system with dynamics that gets transformed according to
+        some function.
+
+        Args:
+            system: original system that must be transformed.
+            transform: transformation to apply to system dynamics at each instant.
+            new_state_dim: dimension of the state of transformed system dynamics
+        """
+        self._system = system
+        self._transform = transform
+        self._state_dim = new_state_dim
+
+    def get_dynamics(self) -> Iterator[LinearDynamics]:
+        return map(self._transform, self._system.get_dynamics())
+
+    @property
+    def state_dim(self) -> int:
+        return self._state_dim
