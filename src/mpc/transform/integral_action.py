@@ -40,12 +40,12 @@ class IntegralActionTransform(ProblemTransform):
             horizon=problem.horizon,
             cost=TransformedCost(
                 problem.cost,
-                partial(self._change_stage_cost, output_dim),
-                partial(self._change_terminal_cost, output_dim),
+                partial(self._change_stage_cost, output_dim=output_dim),
+                partial(self._change_terminal_cost, output_dim=output_dim),
             ),
             system=TransformedSystem(
                 problem.system,
-                partial(self._change_dynamics, self._C, self._D),
+                partial(self._change_dynamics, C=self._C, D=self._D),
                 new_state_dim,
             ),
             initial_state=self._change_initial_state(problem.initial_state, output_dim),

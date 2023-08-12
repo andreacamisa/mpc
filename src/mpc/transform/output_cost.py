@@ -35,8 +35,8 @@ class OutputCostTransform(ProblemTransform):
             problem,
             cost=TransformedCost(
                 problem.cost,
-                partial(self._change_stage_cost, self._C, self._D),
-                partial(self._change_terminal_cost, self._C, self._D),
+                partial(self._change_stage_cost, C=self._C, D=self._D),
+                partial(self._change_terminal_cost, C=self._C, D=self._D),
             ),
         )
         return new_problem, IdentitySolutionTransform()
