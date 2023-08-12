@@ -20,6 +20,7 @@ class IntegralActionTransform(ProblemTransform):
     """
 
     # TODO IVANO: ho aggiunto la C e la D, bisogna riadattare i calcoli nelle funzioni _change_..
+    # TODO ANDREA: aggiungere la C e la D alla dinamica
     # TODO ANDREA: passare yref da usare nel calcolo dell'errore sull'output
 
     def __init__(

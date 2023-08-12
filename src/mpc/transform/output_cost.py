@@ -18,6 +18,7 @@ class OutputCostTransform(ProblemTransform):
     """
 
     # TODO IVANO: ho aggiunto la D, bisogna riadattare i calcoli nelle funzioni _change_..
+    # TODO ANDREA: aggiungere la C e la D alla dinamica
 
     def __init__(
         self,
