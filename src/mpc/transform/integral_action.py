@@ -1,9 +1,11 @@
+from functools import partial
+from typing import Tuple
+
 import numpy as np
 from mpc.cost import QuadraticStageCost, QuadraticTerminalCost, TransformedCost
 from mpc.problem import OptimalControlProblem
-from mpc.solver import ProblemSolution
 from mpc.system import LinearDynamics, TransformedSystem
-from mpc.transform.transform import ProblemTransform
+from mpc.transform.transform import PartialStateSolutionTransform, ProblemTransform
 from nptyping import Float, NDArray, Shape
 
 
@@ -17,32 +19,51 @@ class IntegralActionTransform(ProblemTransform):
     TODO spiegazione matematica piu' dettagliata
     """
 
-    # TODO qui servirebbe la matrice C, per ora assumiamo C = I
+    # TODO IVANO: ho aggiunto la C e la D, bisogna riadattare i calcoli nelle funzioni _change_..
+    # TODO ANDREA: passare yref da usare nel calcolo dell'errore sull'output
 
-    def transform_problem(
+    def __init__(
+        self,
+        output_matrix: NDArray[Shape["P, N"], Float],
+        output_feedthrough: NDArray[Shape["P, P"], Float],
+    ) -> None:
+        self._C = output_matrix
+        self._D = output_feedthrough
+
+    def apply(
         self, problem: OptimalControlProblem
-    ) -> OptimalControlProblem:
-        return OptimalControlProblem(
+    ) -> Tuple[OptimalControlProblem, PartialStateSolutionTransform]:
+        output_dim = self._C.shape[0]
+        new_state_dim = problem.system.state_dim + output_dim
+        new_problem = OptimalControlProblem(
             horizon=problem.horizon,
             cost=TransformedCost(
-                problem.cost, self._change_stage_cost, self._change_terminal_cost
+                problem.cost,
+                partial(self._change_stage_cost, output_dim),
+                partial(self._change_terminal_cost, output_dim),
             ),
-            system=TransformedSystem(problem.system, self._change_dynamics),
-            initial_state=self._change_initial_state(problem.initial_state),
+            system=TransformedSystem(
+                problem.system,
+                partial(self._change_dynamics, self._C, self._D),
+                new_state_dim,
+            ),
+            initial_state=self._change_initial_state(problem.initial_state, output_dim),
         )
+        solution_transform = PartialStateSolutionTransform(problem.system.state_dim)
+        return new_problem, solution_transform
 
+    @staticmethod
     def _change_initial_state(
-        self, state: NDArray[Shape["N"], Float]
-    ) -> NDArray[Shape["N"], Float]:
-        # TODO IVANO: qui si fanno le dovute manipolazioni allo stato iniziale prima di darlo al solver
-        # raise NotImplementedError()
-        nx = state.shape[0]
-        return np.concatenate(state, np.zeros((nx)))
+        state: NDArray[Shape["*"], Float], output_dim: int
+    ) -> NDArray[Shape["*"], Float]:
+        return np.concatenate(state, np.zeros(output_dim))
 
-    def _change_dynamics(self, dynamics: LinearDynamics) -> LinearDynamics:
-        # TODO IVANO: qui si fanno le dovute manipolazioni alle matrici della dinamica prima di darle al solver
-        # (la funzione viene chiamata separatamente per ogni istante di tempo t)
-        # raise NotImplementedError()
+    @staticmethod
+    def _change_dynamics(
+        dynamics: LinearDynamics,
+        C: NDArray[Shape["P, N"], Float],
+        D: NDArray[Shape["P, N"], Float],
+    ) -> LinearDynamics:
         nx = dynamics.A.shape[0]
         nu = dynamics.B.shape[0]
 
@@ -52,10 +73,11 @@ class IntegralActionTransform(ProblemTransform):
 
         return LinearDynamics(A=A_aug, B=B_aug, c=c_aug)
 
-    def _change_stage_cost(self, cost: QuadraticStageCost) -> QuadraticStageCost:
-        # raise NotImplementedError()
-        #
-        # do NOT weight the integrator state
+    @staticmethod
+    def _change_stage_cost(
+        cost: QuadraticStageCost, output_dim: int
+    ) -> QuadraticStageCost:
+        # do NOT weigh the integrator state
         nx = cost.Q.shape[0]
         nu = cost.R.shape[0]
 
@@ -69,10 +91,10 @@ class IntegralActionTransform(ProblemTransform):
 
         return QuadraticStageCost(Q=Q_aug, R=cost.R, S=S_aug, q=q_aug, r=cost.r)
 
+    @staticmethod
     def _change_terminal_cost(
-        self, cost: QuadraticTerminalCost
+        cost: QuadraticTerminalCost, output_dim: int
     ) -> QuadraticTerminalCost:
-        # raise NotImplementedError()
         nx = cost.Q.shape[0]
 
         Q_aug = np.block(
@@ -81,11 +103,3 @@ class IntegralActionTransform(ProblemTransform):
         q_aug = np.concatenate(cost.q, np.zeros((nx)))
 
         return QuadraticTerminalCost(Q=Q_aug, q=q_aug)
-
-    def inverse_transform_solution(
-        self, solution: ProblemSolution, nx: int
-    ) -> ProblemSolution:
-        # IVANO: serve la dimensione di x originale
-        state_traj = solution.state_traj[:nx]
-
-        return ProblemSolution(state_traj=state_traj, input_traj=solution.input_traj)

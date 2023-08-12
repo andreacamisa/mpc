@@ -1,12 +1,15 @@
+import dataclasses
+from functools import partial
+from typing import Tuple
+
 from mpc.cost import QuadraticStageCost, QuadraticTerminalCost, TransformedCost
 from mpc.problem import OptimalControlProblem
-from mpc.solver import ProblemSolution
-from mpc.transform.transform import ProblemTransform
+from mpc.transform.transform import IdentitySolutionTransform, ProblemTransform
 from nptyping import Float, NDArray, Shape
 
 
 class OutputCostTransform(ProblemTransform):
-    """Transformation that represents having the output in the cost function.
+    """Problem transformation that represents having the output in the cost function.
 
     This transformation enables having the system output in the cost function rather than
     the system state. That is, if y is the system output, then applying this transformation
@@ -14,39 +17,47 @@ class OutputCostTransform(ProblemTransform):
     x'Qx.
     """
 
-    def __init__(self, output_matrix: NDArray[Shape["P, N"], Float]) -> None:
+    # TODO IVANO: ho aggiunto la D, bisogna riadattare i calcoli nelle funzioni _change_..
+
+    def __init__(
+        self,
+        output_matrix: NDArray[Shape["P, N"], Float],
+        output_feedthrough: NDArray[Shape["P, P"], Float],
+    ) -> None:
         self._C = output_matrix
+        self._D = output_feedthrough
 
-    def transform_problem(
+    def apply(
         self, problem: OptimalControlProblem
-    ) -> OptimalControlProblem:
-        return OptimalControlProblem(
-            horizon=problem.horizon,
+    ) -> Tuple[OptimalControlProblem, IdentitySolutionTransform]:
+        new_problem = dataclasses.replace(
+            problem,
             cost=TransformedCost(
-                problem.cost, self._change_stage_cost, self._change_terminal_cost
+                problem.cost,
+                partial(self._change_stage_cost, self._C, self._D),
+                partial(self._change_terminal_cost, self._C, self._D),
             ),
-            system=problem.system,
-            initial_state=problem.initial_state,
         )
+        return new_problem, IdentitySolutionTransform()
 
-    def _change_stage_cost(self, cost: QuadraticStageCost) -> QuadraticStageCost:
-        # Cosi?
-        # (la funzione viene chiamata separatamente per ogni istante di tempo t)
-
-        # qui bisogna immaginare e.g. che cost.Q sia la matrice applicata alla y invece che alla x
+    @staticmethod
+    def _change_stage_cost(
+        cost: QuadraticStageCost,
+        C: NDArray[Shape["P, N"], Float],
+        D: NDArray[Shape["P, N"], Float],
+    ) -> QuadraticStageCost:
         return QuadraticStageCost(
-            Q=self._C.T @ cost.Q @ self._C,
+            Q=C.T @ cost.Q @ C,
             R=cost.R,
-            S=cost.S @ self._C,
-            q=cost.q @ self._C,
+            S=cost.S @ C,
+            q=cost.q @ C,
             r=cost.r,
         )
 
+    @staticmethod
     def _change_terminal_cost(
-        self, cost: QuadraticTerminalCost
+        cost: QuadraticTerminalCost,
+        C: NDArray[Shape["P, N"], Float],
+        D: NDArray[Shape["P, N"], Float],
     ) -> QuadraticTerminalCost:
-        # TODO IVANO: qui si fanno le dovute manipolazioni alle matrici del terminal cost prima di darle al solver
-        return QuadraticStageCost(Q=self._C.T @ cost.Q @ self._C, q=cost.q @ self._C)
-
-    def inverse_transform_solution(self, solution: ProblemSolution) -> ProblemSolution:
-        return solution
+        return QuadraticTerminalCost(Q=C.T @ cost.Q @ C, q=cost.q @ C)
