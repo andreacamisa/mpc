@@ -26,9 +26,9 @@ RUN --mount=type=cache,target=${POETRY_CACHE_DIR},uid=${UID} poetry install --no
 FROM builder AS ci-env
 
 ENV PATH="/home/app/.venv/bin:$PATH"
-COPY --chown=app .ci .ci
 
 RUN --mount=type=cache,target=${POETRY_CACHE_DIR},uid=${UID} poetry install --with dev --no-root
+COPY --chown=app .ci .ci
 COPY --chown=app src src
 COPY --chown=app tests tests
 
