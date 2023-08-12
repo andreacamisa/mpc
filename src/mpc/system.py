@@ -106,4 +106,4 @@ class TransformedSystem(System):
         self._transform = transform
 
     def get_dynamics(self) -> Iterator[LinearDynamics]:
-        yield self._transform(next(self._system.get_dynamics()))
+        return map(self._transform, self._system.get_dynamics())

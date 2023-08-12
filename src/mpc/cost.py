@@ -116,7 +116,7 @@ class TransformedCost(Cost):
         self._terminal_transform = terminal_transform
 
     def get_stage_cost(self) -> Iterator[QuadraticStageCost]:
-        yield self._stage_transform(next(self._cost.get_stage_cost()))
+        return map(self._stage_transform, self._cost.get_stage_cost())
 
     def get_terminal_cost(self) -> QuadraticTerminalCost:
         return self._terminal_transform(self._cost.get_terminal_cost())
