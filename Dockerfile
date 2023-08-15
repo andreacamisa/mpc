@@ -1,4 +1,5 @@
-FROM python:3.8-bookworm as builder
+FROM python:3.8-bookworm AS python-base
+FROM python-base as builder
 
 ARG UID=1000
 
@@ -46,7 +47,7 @@ FROM ci-env as test
 
 RUN pytest -vv tests --log-cli-level INFO
 
-FROM python:3.8-slim-bookworm as production
+FROM python-base as production
 
 RUN useradd --create-home app
 USER app

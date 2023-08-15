@@ -17,14 +17,11 @@
 			"settings": {
 				"python.defaultInterpreterPath": "/usr/local/bin/python",
 				// Linting settings (flake8 + mypy)
-				"python.linting.enabled": true,
-				"python.linting.flake8Enabled": true,
-				"python.linting.flake8Args": [
+				"flake8.args": [
 					"--config",
 					"${containerWorkspaceFolder}/.ci/flake8.ini"
 				],
-				"python.linting.mypyEnabled": true,
-				"python.linting.mypyArgs": [
+				"mypy-type-checker.args": [
 					"--config-file",
 					"${containerWorkspaceFolder}/.ci/mypy.ini",
 					"--python-version",
@@ -39,9 +36,9 @@
 					"editor.codeActionsOnSave": {
 						"source.organizeImports": true
 					},
-					"editor.defaultFormatter": "ms-python.black-formatter"
+					"editor.defaultFormatter": "ms-python.black-formatter",
+					"editor.formatOnSave": true
 				},
-				"editor.formatOnSave": true,
 				"black-formatter.args": [
 					"--config",
 					"${containerWorkspaceFolder}/.ci/black.cfg"
@@ -60,11 +57,15 @@
 				"ms-python.isort",
 				"ms-python.black-formatter",
 				"ms-python.flake8",
+				"ms-python.mypy-type-checker",
 				"eamodio.gitlens"
 			]
 		}
 	},
 	"remoteUser": "vscode",
+	"remoteEnv": {
+		"WORKSPACEDIR": "${containerWorkspaceFolder}"
+	},
 	// Create python virtual environment upon creation of container
 	"postCreateCommand": "poetry install --with dev",
 	// Forward the user's ~/.ssh directory to the container
@@ -73,9 +74,7 @@
 	],
 	// Enable running `docker` inside the container using the host machine docker
 	"features": {
-		"docker-from-docker": {
-			"version": "latest"
-		}
+		"ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
 	},
 	"runArgs": [
 		"--init" // this is recommended for proper process cleanup
