@@ -71,9 +71,7 @@
 	],
 	// Enable running `docker` inside the container using the host machine docker
 	"features": {
-		"docker-from-docker": {
-			"version": "latest"
-		}
+		"ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
 	},
 	"runArgs": [
 		"--init" // this is recommended for proper process cleanup
