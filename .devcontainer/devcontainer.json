@@ -63,6 +63,9 @@
 		}
 	},
 	"remoteUser": "vscode",
+	"remoteEnv": {
+		"WORKSPACEDIR": "${containerWorkspaceFolder}"
+	},
 	// Create python virtual environment upon creation of container
 	"postCreateCommand": "poetry install --with dev",
 	// Forward the user's ~/.ssh directory to the container
