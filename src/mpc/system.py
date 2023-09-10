@@ -23,9 +23,9 @@ InputJacobian: TypeAlias = NDArray[Shape["N, M"], Float]
 
 @dataclass
 class LinearDynamics:
-    """Linear dynamics (with an affine term) of the form
+    """Linear dynamics of the form
 
-    `x(t+1) = Ax(t) + Bu(t) + c`
+    `x(t+1) = Ax(t) + Bu(t)`
     """
 
     A: NDArray[Shape["N, N"], Float]
@@ -34,22 +34,33 @@ class LinearDynamics:
     B: NDArray[Shape["N, M"], Float]
     """Input matrix multiplying `u`."""
 
-    c: NDArray[Shape["N"], Float]  # TODO (acamisa): make field optional
-    """Constant term added to state equation."""
+
+@dataclass
+class CompleteLinearDynamics(LinearDynamics):
+    """Linear dynamics, with output equation, of the form
+
+    `x(t+1) = Ax(t) + Bu(t)` (state equation)
+
+    `y(t) = Cx(t) + Du(t)` (output equation)
+    """
+
+    C: NDArray[Shape["P, N"], Float]
+    """Output matrix multiplying `x`."""
+
+    D: NDArray[Shape["P, M"], Float]
+    """Direct input-output feedthrough matrix multiplying `u`."""
 
 
 class System(ABC):
-    """Discrete-time dynamical system of the form `x(t+1) = f(x(t), u(t), t)`."""
+    """Linear, discrete-time dynamical system of the form `x(t+1) = A(t) x(t) + B u(t)`."""
 
     @abstractmethod
     def get_dynamics(self) -> Iterator[LinearDynamics]:
-        """Get iterator for linearized dynamics of system.
+        """Get iterator for dynamics of system.
 
-        Returns an iterator where each element represents the linearized dynamics of the
+        Returns an iterator where each element represents the dynamics of the
         system at each time instant, starting from time 0.
         """
-        # TODO (acamisa): find better wording here, it's not correct to say linearized dynamics
-        # and then return also an affine term
         pass
 
     @property
@@ -104,32 +115,3 @@ class LinearizedSystem(System):
     @property
     def state_dim(self) -> int:
         return self._x0.shape[0]
-
-
-class TransformedSystem(System):
-    def __init__(
-        self,
-        system: System,
-        transform: Callable[[LinearDynamics], LinearDynamics],
-        new_state_dim: int,
-    ) -> None:
-        """System with dynamics transformed according to some function.
-
-        This class models a system with dynamics that gets transformed according to
-        some function.
-
-        Args:
-            system: original system that must be transformed.
-            transform: transformation to apply to system dynamics at each instant.
-            new_state_dim: dimension of the state of transformed system dynamics
-        """
-        self._system = system
-        self._transform = transform
-        self._state_dim = new_state_dim
-
-    def get_dynamics(self) -> Iterator[LinearDynamics]:
-        return map(self._transform, self._system.get_dynamics())
-
-    @property
-    def state_dim(self) -> int:
-        return self._state_dim

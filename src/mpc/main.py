@@ -1,5 +1,5 @@
 import numpy as np
-from mpc.cost import QuadraticStageCost, QuadraticTerminalCost, TimeInvariantCost
+from mpc.cost import StageCost, TerminalCost, TimeInvariantCost
 from mpc.problem import OptimalControlProblem
 from mpc.solver import RiccatiSolver
 from mpc.system import LinearDynamics, TimeInvariantSystem
@@ -21,7 +21,7 @@ x0 = np.ones(2)
 
 problem = OptimalControlProblem(
     horizon,
-    TimeInvariantCost(QuadraticStageCost(Q, R, S, q, r), QuadraticTerminalCost(Q, q)),
+    TimeInvariantCost(StageCost(Q, R, S, q, r), TerminalCost(Q, q)),
     TimeInvariantSystem(LinearDynamics(A, B, c)),
     x0,
 )

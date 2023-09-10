@@ -14,7 +14,7 @@ from common import (
     R,
     S,
 )
-from mpc.cost import QuadraticStageCost, QuadraticTerminalCost, TimeInvariantCost
+from mpc.cost import StageCost, TerminalCost, TimeInvariantCost
 from mpc.problem import OptimalControlProblem
 from mpc.system import LinearDynamics, TimeInvariantSystem
 
@@ -24,8 +24,8 @@ def regulation_problem() -> OptimalControlProblem:
     return OptimalControlProblem(
         HORIZON,
         TimeInvariantCost(
-            QuadraticStageCost(Q, R, NO_S, NO_Q_VEC, NO_R_VEC),
-            QuadraticTerminalCost(Q, NO_Q_VEC),
+            StageCost(Q, R, NO_S, NO_Q_VEC, NO_R_VEC),
+            TerminalCost(Q, NO_Q_VEC),
         ),
         TimeInvariantSystem(LinearDynamics(A, B, C_VEC)),
         X0,
@@ -36,9 +36,7 @@ def regulation_problem() -> OptimalControlProblem:
 def tracking_problem() -> OptimalControlProblem:
     return OptimalControlProblem(
         HORIZON,
-        TimeInvariantCost(
-            QuadraticStageCost(Q, R, S, Q_VEC, R_VEC), QuadraticTerminalCost(Q, Q_VEC)
-        ),
+        TimeInvariantCost(StageCost(Q, R, S, Q_VEC, R_VEC), TerminalCost(Q, Q_VEC)),
         TimeInvariantSystem(LinearDynamics(A, B, C_VEC)),
         X0,
     )

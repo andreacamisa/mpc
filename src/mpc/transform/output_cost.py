@@ -2,7 +2,7 @@ import dataclasses
 from functools import partial
 from typing import Tuple
 
-from mpc.cost import QuadraticStageCost, QuadraticTerminalCost, TransformedCost
+from mpc.cost import StageCost, TerminalCost, TransformedCost
 from mpc.problem import OptimalControlProblem
 from mpc.transform.transform import IdentitySolutionTransform, ProblemTransform
 from nptyping import Float, NDArray, Shape
@@ -16,6 +16,8 @@ class OutputCostTransform(ProblemTransform):
     is equivalent to assuming that the cost function terms are e.g. of the form y'Qy instead of
     x'Qx.
     """
+
+    # TODO ANDREA: il terminal cost rimane xQx, bisogna richiedere l'inject di Q_T dal costruttore
 
     # TODO IVANO: ho aggiunto la D, bisogna riadattare i calcoli nelle funzioni _change_..
     # TODO ANDREA: aggiungere la C e la D alla dinamica
@@ -43,11 +45,11 @@ class OutputCostTransform(ProblemTransform):
 
     @staticmethod
     def _change_stage_cost(
-        cost: QuadraticStageCost,
+        cost: StageCost,
         C: NDArray[Shape["P, N"], Float],
         D: NDArray[Shape["P, N"], Float],
-    ) -> QuadraticStageCost:
-        return QuadraticStageCost(
+    ) -> StageCost:
+        return StageCost(
             Q=C.T @ cost.Q @ C,
             R=cost.R,
             S=cost.S @ C,
@@ -57,8 +59,8 @@ class OutputCostTransform(ProblemTransform):
 
     @staticmethod
     def _change_terminal_cost(
-        cost: QuadraticTerminalCost,
+        cost: TerminalCost,
         C: NDArray[Shape["P, N"], Float],
         D: NDArray[Shape["P, N"], Float],
-    ) -> QuadraticTerminalCost:
-        return QuadraticTerminalCost(Q=C.T @ cost.Q @ C, q=cost.q @ C)
+    ) -> TerminalCost:
+        return TerminalCost(Q=C.T @ cost.Q @ C, q=cost.q @ C)

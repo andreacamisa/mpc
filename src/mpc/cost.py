@@ -3,12 +3,14 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Callable, Iterable, Iterator
 
+from mpc.system import LinearDynamics, System
 from nptyping import Float, NDArray, Shape
 
 
 @dataclass
-class QuadraticStageCost:
+class StageCost:
     # TODO (acamisa): make S, q, r optional
+    # TODO (acamisa): extend to case prediction horizon != control horizon (-> no u)
 
     Q: NDArray[Shape["N, N"], Float]
     """Matrix for state quadratic term `x'Qx`."""
@@ -27,7 +29,7 @@ class QuadraticStageCost:
 
 
 @dataclass
-class QuadraticTerminalCost:
+class TerminalCost:
     Q: NDArray[Shape["N, N"], Float]
     """Matrix for quadratic term `x'Qx`."""
 
@@ -48,7 +50,7 @@ class Cost(ABC):
     """
 
     @abstractmethod
-    def get_stage_cost(self) -> Iterator[QuadraticStageCost]:
+    def get_stage_cost(self) -> Iterator[StageCost]:
         """Get iterator for stage cost quadratic approximation.
 
         Returns an iterator where each element represents the quadratic approximation of the
@@ -57,7 +59,7 @@ class Cost(ABC):
         pass
 
     @abstractmethod
-    def get_terminal_cost(self) -> QuadraticTerminalCost:
+    def get_terminal_cost(self) -> TerminalCost:
         """Get the terminal cost."""
         pass
 
@@ -65,58 +67,30 @@ class Cost(ABC):
 class TimeInvariantCost(Cost):
     def __init__(
         self,
-        stage_cost: QuadraticStageCost,
-        terminal_cost: QuadraticTerminalCost,
+        stage_cost: StageCost,
+        terminal_cost: TerminalCost,
     ) -> None:
         self._stage_cost = stage_cost
         self._terminal_cost = terminal_cost
 
-    def get_stage_cost(self) -> Iterator[QuadraticStageCost]:
+    def get_stage_cost(self) -> Iterator[StageCost]:
         return itertools.repeat(self._stage_cost)
 
-    def get_terminal_cost(self) -> QuadraticTerminalCost:
+    def get_terminal_cost(self) -> TerminalCost:
         return self._terminal_cost
 
 
 class TimeVaryingCost(Cost):
     def __init__(
         self,
-        stage_costs: Iterable[QuadraticStageCost],
-        terminal_cost: QuadraticTerminalCost,
+        stage_costs: Iterable[StageCost],
+        terminal_cost: TerminalCost,
     ) -> None:
         self._stage_costs = stage_costs
         self._terminal_cost = terminal_cost
 
-    def get_stage_cost(self) -> Iterator[QuadraticStageCost]:
+    def get_stage_cost(self) -> Iterator[StageCost]:
         return iter(self._stage_costs)
 
-    def get_terminal_cost(self) -> QuadraticTerminalCost:
+    def get_terminal_cost(self) -> TerminalCost:
         return self._terminal_cost
-
-
-class TransformedCost(Cost):
-    def __init__(
-        self,
-        cost: Cost,
-        stage_transform: Callable[[QuadraticStageCost], QuadraticStageCost],
-        terminal_transform: Callable[[QuadraticTerminalCost], QuadraticTerminalCost],
-    ) -> None:
-        """Cost function transformed according to some functions.
-
-        This class models a cost function which gets transformed according to some
-        functions applied to stage costs and terminal cost respectively.
-
-        Args:
-            cost: original cost function that must be transformed.
-            stage_transform: transformation to apply to stage costs at each instant.
-            terminal_transform: transformation to apply to terminal cost.
-        """
-        self._cost = cost
-        self._stage_transform = stage_transform
-        self._terminal_transform = terminal_transform
-
-    def get_stage_cost(self) -> Iterator[QuadraticStageCost]:
-        return map(self._stage_transform, self._cost.get_stage_cost())
-
-    def get_terminal_cost(self) -> QuadraticTerminalCost:
-        return self._terminal_transform(self._cost.get_terminal_cost())

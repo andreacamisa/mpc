@@ -1,7 +1,7 @@
 import dataclasses
 from typing import Tuple
 
-from mpc.cost import QuadraticStageCost, QuadraticTerminalCost, TransformedCost
+from mpc.cost import StageCost, TerminalCost, TransformedCost
 from mpc.problem import OptimalControlProblem
 from mpc.transform.transform import IdentitySolutionTransform, ProblemTransform
 from nptyping import Float, NDArray, Shape
@@ -39,17 +39,17 @@ class NonZeroTargetTransform(ProblemTransform):
 
     def _change_stage_cost(
         self,
-        cost: QuadraticStageCost,
-    ) -> QuadraticStageCost:
+        cost: StageCost,
+    ) -> StageCost:
         q_aug = cost.q - 2 * cost.Q @ self._xref - 2 * cost.S.T @ self._uref
         r_aug = cost.r - 2 * cost.R @ self._uref - 2 * cost.S @ self._xref
 
-        return QuadraticStageCost(Q=cost.Q, R=cost.R, S=cost.S, q=q_aug, r=r_aug)
+        return StageCost(Q=cost.Q, R=cost.R, S=cost.S, q=q_aug, r=r_aug)
 
     def _change_terminal_cost(
         self,
-        cost: QuadraticTerminalCost,
-    ) -> QuadraticTerminalCost:
+        cost: TerminalCost,
+    ) -> TerminalCost:
         q_aug = cost.q - 2 * cost.Q @ self._xref
 
-        return QuadraticTerminalCost(cost.Q, q=q_aug)
+        return TerminalCost(cost.Q, q=q_aug)
